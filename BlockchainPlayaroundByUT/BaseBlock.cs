@@ -1,18 +1,17 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace CryptoBlocks
 {
-    public class Block
+    abstract class BaseBlock
     {
-        public Block(DateTime TimeStamp, object Transaction, string PreviousHash)
+        public BaseBlock(DateTime TimeStamp, object Transaction, string PreviousHash)
         {
             this.Timestamp = TimeStamp;
             this.Transaction = Transaction;
             this.PreviousHash = PreviousHash;
-            this.Hash = GenerateHash(3);
+            this.Hash = CalculateHash();
         }
 
 
@@ -36,15 +35,16 @@ namespace CryptoBlocks
         /// </returns>
         public string CalculateHash()
         {
-            string hashString = string.Empty;
-            string rawData = $"{this.Timestamp:yyyy/MM/dd/HH:mm:ss}{this.Transaction}{this.PreviousHash}{this.Nonce}";
-
             SHA256 sha256Hash = SHA256.Create();
+
+            string rawData = $"{this.Timestamp:yyyy/MM/dd/HH:mm:ss}{this.Transaction}{this.PreviousHash}{this.Nonce}";
 
 
             //Compute hash
             byte[] hash = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
 
+
+            string hashString = string.Empty;
 
             foreach (byte item in hash)
             {
@@ -54,31 +54,6 @@ namespace CryptoBlocks
 
             return hashString;
         }
-
-
-        private string GenerateHash(int difficulty)
-        {
-            string hashString = this.CalculateHash();
-
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-
-            while (hashString.Substring(0, difficulty) != new string('0', difficulty))
-            {
-                this.Nonce++;
-                this.Hash = hashString;
-                hashString = this.CalculateHash();
-
-                //Console.WriteLine(hashString + "\t" + Nonce + "\t" + stopwatch.Elapsed);
-            }
-
-            stopwatch.Stop();
-
-            Console.WriteLine("Mined\t" + stopwatch.Elapsed);
-
-            return hashString;
-        }
-
 
         public override string ToString()
         {
